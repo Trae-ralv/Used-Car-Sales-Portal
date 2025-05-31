@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AutoXpress - About Us</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .about-container {
+            margin: 30px auto;
+            max-width: 1200px;
+        }
+
+        .about-header {
+            background: linear-gradient(to right, #007bff, #00c6ff);
+            color: white;
+            padding: 50px 0;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .about-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .about-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .feature-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-card i {
+            font-size: 2rem;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Include the navigation bar -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container about-container">
+        <!-- About Header -->
+        <div class="about-header">
+            <h1>About AutoXpress</h1>
+            <p>Your Trusted Platform for Buying and Selling Cars</p>
+        </div>
+
+        <!-- About Section -->
+        <section class="mb-5">
+            <h2 class="text-center mb-4">Our Mission</h2>
+            <p class="text-center">
+                AutoXpress is dedicated to simplifying the process of buying and selling cars. We provide a user-friendly platform where individuals can list their cars for sale, book test drives, and connect with potential buyers securely and efficiently. Our mission is to make car trading seamless, transparent, and accessible for everyone.
+            </p>
+        </section>
+
+        <!-- Features Section -->
+        <section class="mb-5">
+            <h2 class="text-center mb-4">Why Choose AutoXpress?</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-car"></i>
+                        <h3>Easy Car Listing</h3>
+                        <p>List your car in minutes with our intuitive form. Upload photos, set your price, and reach thousands of potential buyers.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-calendar-check"></i>
+                        <h3>Seamless Test Drives</h3>
+                        <p>Book test drives with sellers directly through our platform. Manage appointments and get notifications for updates.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Secure Transactions</h3>
+                        <p>Our platform ensures secure communication and transactions, with admin oversight to maintain trust and safety.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Include the footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+
+</html>

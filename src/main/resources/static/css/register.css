@@ -1,0 +1,30 @@
+body {
+    margin: 0;
+    min-height: 100vh;
+}
+
+.register-container {
+    width: 25%;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+.error-message {
+    color: red;
+    font-size: 0.9rem;
+}
+.success-message {
+    color: green;
+    font-size: 0.9rem;
+}
+
+.content {
+    /*flex: 1; ensures it takes up remaining space*/
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+	min-height: 90vh;
+}

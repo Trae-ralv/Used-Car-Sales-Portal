@@ -1,0 +1,35 @@
+body {
+    margin: 0;
+    min-height: 100vh;
+}
+
+.content {
+    /*flex: 1; ensures it takes up remaining space*/
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.hero-section {
+	background-color: #f8f9fa;
+	padding: 60px 0;
+	text-align: center;
+}
+
+.hero-section h1 {
+	font-size: 2.5rem;
+	margin-bottom: 20px;
+}
+
+.hero-section p {
+	font-size: 1.2rem;
+	margin-bottom: 30px;
+}
+
+.footer{
+	bottom: 0;
+	width: 100%;
+	position: fixed;
+}

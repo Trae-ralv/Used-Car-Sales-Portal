@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+	<title>AutoXpress - Car Listings</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<link rel="stylesheet" th:href="@{/css/car-listing.css}">
+</head>
+
+<body>
+	<!-- Include the navigation bar -->
+	<div th:replace="~{fragments/header :: header}"></div>
+
+	<div class="container mt-5">
+		<h1>Car Listings</h1>
+		<div class="row">
+			<!-- Sidebar with Filters -->
+			<div class="col-md-3">
+				<div class="sidebar">
+					<h3>Filter Cars</h3>
+					<div class="mb-3">
+						<label for="make" class="form-label">Make</label>
+						<input type="text" name="make" id="make" class="form-control" th:value="${make}" />
+					</div>
+					<div class="mb-3 ">
+						<label for="carModel" class="form-label">Model</label>
+						<input type="text" name="carModel" id="carModel" class="form-control" th:value="${carModel}" />
+					</div>
+					<div class="mb-3">
+						<label for="year" class="form-label">Year</label>
+						<input type="number" name="year" id="year" class="form-control" th:value="${year}" />
+					</div>
+					<div class="mb-3">
+						<label for="minPrice" class="form-label">Min Price</label>
+						<input type="number" step="0.01" name="minPrice" id="minPrice" class="form-control"
+							th:value="${minPrice}" />
+					</div>
+					<div class="mb-3">
+						<label for="maxPrice" class="form-label">Max Price</label>
+						<input type="number" step="0.01" name="maxPrice" id="maxPrice" class="form-control"
+							th:value="${maxPrice}" />
+					</div>
+					<div class="mb-3">
+						<label for="mileage" class="form-label">Max Mileage</label>
+						<input type="number" name="mileage" id="mileage" class="form-control" th:value="${mileage}" />
+					</div>
+					<div class="mb-3">
+						<label for="fuelType" class="form-label">Fuel Type</label>
+						<select name="fuelType" id="fuelType" class="form-select">
+							<option value="">Any</option>
+							<option th:each="type : ${fuelTypes}" th:value="${type}" th:text="${type}"
+								th:selected="${fuelType == type}"></option>
+						</select>
+					</div>
+					<div class="mb-4">
+						<label for="transmission" class="form-label">Transmission</label>
+						<select name="transmission" id="transmission" class="form-select">
+							<option value="">Any</option>
+							<option th:each="type : ${transmissionTypes}" th:value="${type}" th:text="${type}"
+								th:selected="${transmission == type}"></option>
+						</select>
+					</div>
+					<div class="mb-4">
+						<a href="#" id="clearFilters" class="btn btn-secondary clearbutton">Clear</a>
+					</div>
+					<div th:replace="~{fragments/footer :: footer}"></div>
+				</div>
+			</div>
+
+			<!-- Car Listings -->
+			<div class="col-md-9">
+				<div id="carList">
+					<!-- Cars will be dynamically loaded here -->
+				</div>
+
+				<!-- Pagination -->
+				<nav id="pagination" aria-label="Page navigation">
+					<!-- Pagination will be dynamically loaded here -->
+				</nav>
+			</div>
+		</div>
+	</div>
+	<script th:inline="javascript">
+	    $(document).ready(function () {
+	        // Function to load cars dynamically
+	        function loadCars(page = 0) {
+	            const params = {
+	                page: page,
+	                size: /*[[${pageSize}]]*/ 5,
+	                make: $('#make').val(),
+	                carModel: $('#carModel').val(),
+	                year: $('#year').val(),
+	                minPrice: $('#minPrice').val(),
+	                maxPrice: $('#maxPrice').val(),
+	                mileage: $('#mileage').val(),
+	                fuelType: $('#fuelType').val(),
+	                transmission: $('#transmission').val()
+	            };
+
+	            $.ajax({
+	                url: '/cars/search',
+	                type: 'GET',
+	                data: params,
+	                success: function (response) {
+	                    console.log('AJAX Response:', response); // Debug log
+
+	                    // Update car list
+	                    const carList = $('#carList');
+	                    carList.empty();
+
+	                    // Check if response.cars exists and is an array
+	                    if (!response || !Array.isArray(response.cars)) {
+	                        carList.append('<p>No cars available or an error occurred.</p>');
+	                        return;
+	                    }
+
+	                    if (response.cars.length === 0) {
+	                        carList.append('<p>No cars available at the moment.</p>');
+	                    } else {
+	                        response.cars.forEach(car => {
+	                            const carHtml = `
+	                                <div class="car-listing-row row align-items-center">
+	                                    <div class="col-md-4">
+	                                        <img src="${car.carImages && car.carImages.length > 0 ? car.carImages[0].imagePath : '/images/uploads/default-car.jpg'}" class="car-image" alt="Car Image">
+	                                    </div>
+	                                    <div class="col-md-8">
+	                                        <h5>${car.carMake} ${car.carModel}</h5>
+	                                        <p>
+	                                            Price: $${car.carPrice}<br>
+	                                            Mileage: ${car.carMileage != null ? car.carMileage + ' miles' : 'N/A'}<br>
+	                                            Fuel Type: ${car.fuelType != null ? car.fuelType : 'N/A'}<br>
+	                                            Transmission: ${car.transmissionType != null ? car.transmissionType : 'N/A'}
+	                                        </p>
+	                                        <a href="/cars/${car.carId}" class="btn btn-primary">View Details</a>
+	                                    </div>
+	                                </div>
+	                            `;
+	                            carList.append(carHtml);
+	                        });
+	                    }
+
+	                    // Update pagination
+	                    const pagination = $('#pagination');
+	                    pagination.empty();
+	                    // Always render pagination, even if there's only one page
+	                    let paginationHtml = `
+	                        <ul class="pagination justify-content-center">
+	                            <li class="page-item ${response.currentPage === 0 ? 'disabled' : ''}">
+	                                <a class="page-link" href="#" data-page="${response.currentPage - 1}">Previous</a>
+	                            </li>
+	                    `;
+	                    const totalPages = response.totalPages || 1; // Default to 1 if undefined
+	                    for (let i = 0; i < totalPages; i++) {
+	                        paginationHtml += `
+	                            <li class="page-item ${i === response.currentPage ? 'active' : ''}">
+	                                <a class="page-link" href="#" data-page="${i}">${i + 1}</a>
+	                            </li>
+	                        `;
+	                    }
+	                    paginationHtml += `
+	                            <li class="page-item ${response.currentPage === totalPages - 1 ? 'disabled' : ''}">
+	                                <a class="page-link" href="#" data-page="${response.currentPage + 1}">Next</a>
+	                            </li>
+	                        </ul>
+	                    `;
+	                    pagination.append(paginationHtml);
+
+	                    // Attach click handlers to pagination links
+	                    $('#pagination a[data-page]').off('click').on('click', function (e) {
+	                        e.preventDefault();
+	                        const page = $(this).data('page');
+	                        loadCars(page);
+	                    });
+	                },
+	                error: function (xhr, status, error) {
+	                    console.error('AJAX Error:', status, error, xhr.responseText); // Debug log
+	                    $('#carList').html('<p>Error loading cars. Please try again.</p>');
+	                }
+	            });
+	        }
+
+	        // Trigger search on input change
+	        $('#make, #carModel, #year, #minPrice, #maxPrice, #mileage, #fuelType, #transmission').on('input change', function () {
+	            loadCars(0); // Reset to first page on filter change
+	        });
+
+	        // Clear filters
+	        $('#clearFilters').on('click', function (e) {
+	            e.preventDefault();
+	            $('#make, #carModel, #year, #minPrice, #maxPrice, #mileage').val('');
+	            $('#fuelType, #transmission').val('');
+	            loadCars(0); // Reset to first page
+	        });
+
+	        // Initial load
+	        loadCars(0);
+	    });
+	</script>
+</body>
+
+</html>

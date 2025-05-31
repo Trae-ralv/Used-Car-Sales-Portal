@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+	<title>AutoXpress - Car Details</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<link rel="stylesheet" th:href="@{/css/car-details.css}">
+</head>
+
+<body>
+	<!-- Include the navigation bar -->
+	<div th:replace="~{fragments/header :: header}"></div>
+
+	<div class="container mt-5">
+		<h1>Car Details</h1>
+
+		<!-- Error Message -->
+		<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+		<!-- Car Information -->
+		<div class="row">
+			<!-- Car Images Carousel -->
+			<div class="col-md-6">
+				<div id="carImagesCarousel" class="carousel slide" data-bs-ride="carousel">
+					<div class="carousel-inner">
+						<div th:if="${#lists.isEmpty(car.carImages)}" class="carousel-item active">
+							<img src="/images/uploads/default-car.jpg" class="d-block w-100 car-image"
+								alt="Default Car Image">
+						</div>
+						<div th:unless="${#lists.isEmpty(car.carImages)}" class="carousel-item"
+							th:classappend="${carImageStat.first} ? 'active'"
+							th:each="carImage, carImageStat : ${car.carImages}">
+							<img th:src="@{${carImage.imagePath}}" class="d-block w-100 car-image"
+								th:alt="'Image ' + ${carImageStat.count} + ' of ' + ${car.carMake} + ' ' + ${car.carModel}">
+						</div>
+					</div>
+					<button class="carousel-control-prev" type="button" data-bs-target="#carImagesCarousel"
+						data-bs-slide="prev">
+						<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+						<span class="visually-hidden">Previous</span>
+					</button>
+					<button class="carousel-control-next" type="button" data-bs-target="#carImagesCarousel"
+						data-bs-slide="next">
+						<span class="carousel-control-next-icon" aria-hidden="true"></span>
+						<span class="visually-hidden">Next</span>
+					</button>
+				</div>
+			</div>
+
+			<!-- Car Details -->
+			<div class="col-md-6">
+				<h2 th:text="${car.carMake} + ' ' + ${car.carModel}"></h2>
+				<p><strong>Year:</strong> <span th:text="${car.registrationYear}"></span></p>
+				<p><strong>Price:</strong> $<span th:text="${car.carPrice}"></span></p>
+				<p><strong>Mileage:</strong> <span
+						th:text="${car.carMileage != null ? car.carMileage + ' miles' : 'N/A'}"></span></p>
+				<p><strong>Fuel Type:</strong> <span th:text="${car.fuelType != null ? car.fuelType : 'N/A'}"></span>
+				</p>
+				<p><strong>Transmission:</strong> <span
+						th:text="${car.transmissionType != null ? car.transmissionType : 'N/A'}"></span></p>
+				<p><strong>Status:</strong> <span th:text="${car.carStatus}"></span></p>
+				<p><strong>Posted By:</strong> <span th:text="${car.carUser.username}"></span></p>
+			</div>
+		</div>
+
+		<!-- Actions (Book Appointment and Report) -->
+		<div sec:authorize="hasRole('USER')" class="mt-4">
+			<h3>Actions</h3>
+			<div class="row">
+				<!-- Book Appointment Form -->
+				<div class="col-md-6">
+					<h4>Book a Test Drive</h4>
+					<form th:action="@{/cars/{id}/appointment(id=${car.carId})}" th:object="${appointment}"
+						method="post">
+						<div class="mb-3">
+							<label for="appointmentDate" class="form-label">Appointment Date</label>
+							<input type="datetime-local" class="form-control" id="appointmentDate"
+								th:field="*{appointmentDate}" required>
+							<div class="invalid-feedback">Please select a valid date and time.</div>
+						</div>
+						<button type="submit" class="btn btn-primary">Book Appointment</button>
+					</form>
+					<div th:if="${param.appointmentBooked}" class="alert alert-success mt-3">
+						Appointment booked successfully!
+					</div>
+				</div>
+
+				<!-- Report Car Form -->
+				<div class="col-md-6">
+					<h4>Report This Car</h4>
+					<form th:action="@{/cars/{id}/report(id=${car.carId})}" th:object="${report}" method="post">
+						<div class="mb-3">
+							<label for="reportReason" class="form-label">Reason</label>
+							<select class="form-select" id="reportReason" th:field="*{reportReason}" required>
+								<option value="">Select a reason</option>
+								<option th:each="reason : ${T(com.autoxpress.model.ReportModel$ReportReason).values()}"
+									th:value="${reason}" th:text="${reason}"></option>
+							</select>
+							<div class="invalid-feedback">Please select a reason.</div>
+						</div>
+						<div class="mb-3">
+							<label for="reportDescription" class="form-label">Description</label>
+							<textarea class="form-control" id="reportDescription" th:field="*{reportDescription}"
+								rows="3"></textarea>
+						</div>
+						<button type="submit" class="btn btn-danger">Submit Report</button>
+					</form>
+					<div th:if="${param.reportSubmitted}" class="alert alert-success mt-3">
+						Report submitted successfully!
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Unauthenticated Prompt -->
+		<div sec:authorize="!isAuthenticated()" class="mt-4">
+			<p>Please <a th:href="@{/login}">log in</a> to book a test drive or report this car.</p>
+		</div>
+
+	</div>
+	<div th:replace="~{fragments/footer :: footer}"></div>
+	<script>
+		$(document).ready(function () {
+			$('form').on('submit', function (event) {
+				if (!this.checkValidity()) {
+					event.preventDefault();
+					event.stopPropagation();
+				}
+				$(this).addClass('was-validated');
+			});
+		});
+	</script>
+</body>
+
+</html>

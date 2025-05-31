@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+	<meta charset="UTF-8">
+	<title>AutoXpress - Admin Dashboard</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<link rel="stylesheet" th:href="@{/css/admin-dashboard.css}">
+	<link rel="stylesheet" th:href="@{/css/alert.css}">
+</head>
+
+<body>
+	<!-- Include the navigation bar -->
+	<div th:replace="~{fragments/header :: header}"></div>
+
+	<!-- Success Messages -->
+	<div th:if="${param.adminMarked}" class="alert alert-success success-message alerts auto-hide">User marked as admin
+		successfully!</div>
+	<div th:if="${param.userEdited}" class="alert alert-success success-message alerts auto-hide">User edited successfully!
+	</div>
+	<div th:if="${param.userDeleted}" class="alert alert-success success-message alerts auto-hide">User deleted
+		successfully!</div>
+	<div th:if="${param.userDemoted}" class="alert alert-success success-message alerts auto-hide">User demoted to regular
+		user successfully!</div>
+	<div th:if="${param.carEdited}" class="alert alert-success success-message alerts auto-hide">Car edited successfully!
+	</div>
+	<div th:if="${param.carDeleted}" class="alert alert-success success-message alerts auto-hide">Car deleted successfully!
+	</div>
+	<div th:if="${param.carApproved}" class="alert alert-success success-message alerts auto-hide">Car approved
+		successfully!</div>
+	<div th:if="${param.carDeactivated}" class="alert alert-success success-message alerts auto-hide">Car deactivated
+		successfully!</div>
+	<div th:if="${param.carSold}" class="alert alert-success success-message alerts auto-hide">Car marked as sold
+		successfully!</div>
+	<div th:if="${param.appointmentApproved}" class="alert alert-success success-message alerts auto-hide">Test drive
+		approved successfully!</div>
+	<div th:if="${param.appointmentDenied}" class="alert alert-success success-message alerts auto-hide">Test drive denied
+		successfully!</div>
+	<div th:if="${param.profileUpdated}" class="alert alert-success success-message alerts auto-hide">Profile updated
+		successfully!</div>
+	<div th:if="${param.reportResolved}" class="alert alert-success success-message alerts auto-hide">Report resolved
+		successfully!</div>
+
+	<!-- Error Messages -->
+	<div th:if="${param.error == 'UserNotFound'}" class="alert alert-danger error-message alerts auto-hide">Failed to
+		manage user: User not found.</div>
+	<div th:if="${param.error == 'CannotDeleteAdmin'}" class="alert alert-danger error-message alerts auto-hide">Cannot
+		delete an admin user.</div>
+	<div th:if="${param.error == 'CannotDemoteSelf'}" class="alert alert-danger error-message alerts auto-hide">Cannot
+		demote yourself.</div>
+	<div th:if="${param.error == 'UserEditFailed'}" class="alert alert-danger error-message alerts auto-hide">Failed to
+		edit user: An error occurred.</div>
+	<div th:if="${param.error == 'CarNotFound'}" class="alert alert-danger error-message alerts auto-hide">Failed to manage
+		car: Car not found.</div>
+	<div th:if="${param.error == 'CarEditFailed'}" class="alert alert-danger error-message alerts auto-hide">Failed to edit
+		car: An error occurred.</div>
+	<div th:if="${param.error == 'UnreasonablePrice'}" class="alert alert-danger error-message alerts auto-hide">
+		Failed to activate car: Price is not reasonable (Price: $<span th:text="${param.price}"></span>).
+	</div>
+	<div th:if="${param.error == 'AppointmentNotFound'}" class="alert alert-danger error-message alerts auto-hide">Failed
+		to approve/deny test drive: Appointment not found.</div>
+	<div th:if="${param.error == 'ReportNotFound'}" class="alert alert-danger error-message alerts auto-hide">Failed to
+		resolve report: Report not found.</div>
+	<div th:if="${param.error == 'DemotionFailed'}" class="alert alert-danger error-message alerts auto-hide">Failed to
+		demote user: An error occurred.</div>
+
+	<div class="container-fluid content">
+		<div class="container dashboard-container">
+			<h2>Admin Dashboard</h2>
+			<div class="row mt-4">
+				<!-- Sidebar Navigation -->
+				<div class="col-md-3">
+					<div class="sidebar">
+						<ul class="nav flex-column">
+							<li class="nav-item">
+								<a class="nav-link active" id="profile-tab" data-bs-toggle="tab" href="#profile-panel"
+									role="tab">Profile</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" id="users-tab" data-bs-toggle="tab" href="#users-panel"
+									role="tab">Manage Users</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" id="cars-tab" data-bs-toggle="tab" href="#cars-panel"
+									role="tab">Manage
+									Cars</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" id="appointments-tab" data-bs-toggle="tab"
+									href="#appointments-panel" role="tab">Manage Appointments</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" id="reports-tab" data-bs-toggle="tab" href="#reports-panel"
+									role="tab">Manage Reports</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+
+				<!-- Content Panels -->
+				<div class="col-md-9">
+					<div class="tab-content">
+						<!-- Profile Panel -->
+						<div class="tab-pane fade show active section-card" id="profile-panel" role="tabpanel">
+							<h4>Admin Profile</h4>
+							<form th:action="@{/admin/profile}" th:object="${user}" method="post"
+								class="needs-validation" novalidate>
+								<!-- CSRF Token -->
+								<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+								<div class="mb-3">
+									<label for="username" class="form-label">Username</label>
+									<input type="text" class="form-control" id="username" th:field="*{username}"
+										readonly>
+									<div th:errors="*{username}" class="error-message"></div>
+								</div>
+								<div class="mb-3">
+									<label for="email" class="form-label">Email</label>
+									<input type="email" class="form-control" id="email" th:field="*{email}" required>
+									<div th:errors="*{email}" class="error-message"></div>
+									<div class="invalid-feedback">Please enter a valid email.</div>
+								</div>
+								<button type="submit" class="btn btn-primary">Update Profile</button>
+							</form>
+						</div>
+
+						<!-- Users Panel -->
+						<div class="tab-pane fade section-card" id="users-panel" role="tabpanel">
+							<h4>Manage Users</h4>
+							<div th:if="${users.size() == 0}" class="alert alert-info">No users found.</div>
+							<div th:unless="${users.size() == 0}" class="table-responsive">
+								<table class="table table-striped">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Username</th>
+											<th>Email</th>
+											<th>Role</th>
+											<th>Action</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr th:each="user, userStat : ${users}">
+											<td th:text="${userStat.count}"></td>
+											<td th:text="${user.username}"></td>
+											<td th:text="${user.email}"></td>
+											<td th:text="${user.userRole}"></td>
+											<td>
+												<button class="btn btn-warning btn-sm" data-bs-toggle="modal" th:attr="data-bs-target='#editUserModal', 
+					                                        data-user-id=${user.userId}, 
+					                                        data-username=${user.username}, 
+					                                        data-email=${user.email}"
+													th:if="${user.userId.toString() != #authentication.name}">
+													Edit
+												</button>
+												<button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+													th:attr="data-bs-target='#deleteUserModal', data-user-id=${user.userId}"
+													th:if="${user.userRole.toString() == 'USER'}">
+													Delete
+												</button>
+												<form th:action="@{/admin/users/mark-admin}" method="post"
+													th:if="${user.userRole.toString() == 'USER'}" class="d-inline">
+													<input type="hidden" th:name="${_csrf.parameterName}"
+														th:value="${_csrf.token}" />
+													<input type="hidden" name="userId" th:value="${user.userId}">
+													<button type="submit" class="btn btn-primary btn-sm">Make
+														Admin</button>
+												</form>
+												<form th:action="@{/admin/users/make-user}" method="post"
+													th:if="${user.userRole.toString() == 'ADMIN' and user.userId.toString() != #authentication.name}"
+													class="d-inline">
+													<input type="hidden" th:name="${_csrf.parameterName}"
+														th:value="${_csrf.token}" />
+													<input type="hidden" name="userId" th:value="${user.userId}">
+													<button type="submit" class="btn btn-warning btn-sm">Make
+														User</button>
+												</form>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<!-- Cars Panel -->
+						<div class="tab-pane fade section-card" id="cars-panel" role="tabpanel">
+							<h4>Manage Car Posts</h4>
+							<div th:if="${cars.size() == 0}" class="alert alert-info">No cars found.</div>
+							<div th:unless="${cars.size() == 0}" class="table-responsive">
+								<table class="table table-striped">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Make</th>
+											<th>Model</th>
+											<th>Year</th>
+											<th>Price</th>
+											<th>Status</th>
+											<th>Actions</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr th:each="car, carStat : ${cars}">
+											<td th:text="${carStat.count}"></td>
+											<td th:text="${car.carMake}"></td>
+											<td th:text="${car.carModel}"></td>
+											<td th:text="${car.registrationYear}"></td>
+											<td th:text="'$' + ${car.carPrice}"></td>
+											<td th:text="${car.carStatus}"></td>
+											<td>
+												<button class="btn btn-warning btn-sm" data-bs-toggle="modal" th:attr="data-bs-target='#editCarModal', 
+                                                            data-car-id=${car.carId}, 
+                                                            data-make=${car.carMake}, 
+                                                            data-model=${car.carModel}, 
+                                                            data-year=${car.registrationYear}, 
+                                                            data-price=${car.carPrice}, 
+                                                            data-mileage=${car.carMileage}, 
+                                                            data-fuel-type=${car.fuelType}, 
+                                                            data-transmission=${car.transmissionType}, 
+                                                            data-status=${car.carStatus}">
+													Edit
+												</button>
+												<button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+													th:attr="data-bs-target='#deleteCarModal', data-car-id=${car.carId}">
+													Delete
+												</button>
+												<form th:action="@{/admin/cars/activate}" method="post"
+													th:if="${car.carStatus.toString().toUpperCase() == 'PENDING'}"
+													class="d-inline">
+													<input type="hidden" th:name="${_csrf.parameterName}"
+														th:value="${_csrf.token}" />
+													<input type="hidden" name="carId" th:value="${car.carId}">
+													<button type="submit"
+														class="btn btn-success btn-sm">Approve</button>
+												</form>
+												<form th:action="@{/admin/cars/deactivate}" method="post"
+													th:if="${car.carStatus.toString().toUpperCase() == 'ACTIVE'}"
+													class="d-inline">
+													<input type="hidden" th:name="${_csrf.parameterName}"
+														th:value="${_csrf.token}" />
+													<input type="hidden" name="carId" th:value="${car.carId}">
+													<button type="submit"
+														class="btn btn-danger btn-sm">Deactivate</button>
+												</form>
+												<form th:action="@{/admin/cars/sell}" method="post"
+													th:if="${car.carStatus.toString().toUpperCase() == 'ACTIVE'}"
+													class="d-inline">
+													<input type="hidden" th:name="${_csrf.parameterName}"
+														th:value="${_csrf.token}" />
+													<input type="hidden" name="carId" th:value="${car.carId}">
+													<button type="submit" class="btn btn-primary btn-sm">Mark as
+														Sold</button>
+												</form>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<!-- Appointments Panel -->
+						<div class="tab-pane fade section-card" id="appointments-panel" role="tabpanel">
+							<h4>Manage Test Drive Appointments</h4>
+							<div th:if="${appointments.size() == 0}" class="alert alert-info">No appointments found.
+							</div>
+							<div th:unless="${appointments.size() == 0}" class="table-responsive">
+								<table class="table table-striped">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>User</th>
+											<th>Car</th>
+											<th>Date</th>
+											<th>Status</th>
+											<th>Actions</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr th:each="appointment, appointmentStat : ${appointments}">
+											<td th:text="${appointmentStat.count}"></td>
+											<td th:text="${appointment.appointmentUser.username}"></td>
+											<td
+												th:text="${appointment.appointmentCar.carMake} + ' ' + ${appointment.appointmentCar.carModel}">
+											</td>
+											<td class="appointmentDate" th:text="${appointment.appointmentDate}"></td>
+											<td th:text="${appointment.appointmentStatus}"></td>
+											<td>
+												<form th:action="@{/admin/appointments/approve}" method="post"
+													th:if="${appointment.appointmentStatus.toString().toUpperCase() == 'PENDING'}">
+													<input type="hidden" th:name="${_csrf.parameterName}"
+														th:value="${_csrf.token}" />
+													<input type="hidden" name="appointmentId"
+														th:value="${appointment.appointmentId}">
+													<button type="submit"
+														class="btn btn-success btn-sm">Approve</button>
+												</form>
+												<form th:action="@{/admin/appointments/deny}" method="post"
+													th:if="${appointment.appointmentStatus.toString().toUpperCase() == 'PENDING'}">
+													<input type="hidden" th:name="${_csrf.parameterName}"
+														th:value="${_csrf.token}" />
+													<input type="hidden" name="appointmentId"
+														th:value="${appointment.appointmentId}">
+													<button type="submit" class="btn btn-danger btn-sm">Deny</button>
+												</form>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<!-- Reports Panel -->
+						<div class="tab-pane fade section-card" id="reports-panel" role="tabpanel">
+							<h4>Manage Reports</h4>
+							<div th:if="${reports.size() == 0}" class="alert alert-info">No reports found.</div>
+							<div th:unless="${reports.size() == 0}" class="table-responsive">
+								<table class="table table-striped">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>User</th>
+											<th>Car</th>
+											<th>Reason</th>
+											<th>Description</th>
+											<th>Status</th>
+											<th>Action</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr th:each="report, reportStat : ${reports}">
+											<td th:text="${reportStat.count}"></td>
+											<td th:text="${report.reportUser.username}"></td>
+											<td
+												th:text="${report.reportCar.carMake} + ' ' + ${report.reportCar.carModel}">
+											</td>
+											<td th:text="${report.reportReason}"></td>
+											<td th:text="${report.reportDescription} ?: 'N/A'"></td>
+											<td th:text="${report.reportStatus}"></td>
+											<td>
+												<form th:action="@{/admin/reports/resolve}" method="post"
+													th:if="${report.reportStatus.toString().toUpperCase() == 'PENDING'}">
+													<input type="hidden" th:name="${_csrf.parameterName}"
+														th:value="${_csrf.token}" />
+													<input type="hidden" name="reportId" th:value="${report.reportId}">
+													<button type="submit"
+														class="btn btn-primary btn-sm">Resolve</button>
+												</form>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Edit User Modal -->
+			<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel"
+				aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<form id="editUserForm" th:action="@{/admin/users/edit}" method="post"
+								class="needs-validation" novalidate>
+								<input type="hidden" name="userId" id="editUserId">
+								<div class="mb-3">
+									<label for="editUsername" class="form-label">Username</label>
+									<input type="text" class="form-control" id="editUsername" name="username" required>
+									<div class="invalid-feedback">Please enter a valid username.</div>
+								</div>
+								<div class="mb-3">
+									<label for="editEmail" class="form-label">Email</label>
+									<input type="email" class="form-control" id="editEmail" name="email" required>
+									<div class="invalid-feedback">Please enter a valid email.</div>
+								</div>
+								<button type="submit" class="btn btn-primary w-100">Save Changes</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Edit Car Modal -->
+			<div class="modal fade" id="editCarModal" tabindex="-1" aria-labelledby="editCarModalLabel"
+				aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="editCarModalLabel">Edit Car</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<form id="editCarForm" th:action="@{/admin/cars/edit}" method="post"
+								class="needs-validation" novalidate>
+								<input type="hidden" name="carId" id="editCarId">
+								<div class="mb-3">
+									<label for="editCarMake" class="form-label">Make</label>
+									<input type="text" class="form-control" id="editCarMake" name="carMake" required>
+									<div class="invalid-feedback">Please enter the car make.</div>
+								</div>
+								<div class="mb-3">
+									<label for="editCarModel" class="form-label">Model</label>
+									<input type="text" class="form-control" id="editCarModel" name="carModel" required>
+									<div class="invalid-feedback">Please enter the car model.</div>
+								</div>
+								<div class="mb-3">
+									<label for="editCarYear" class="form-label">Year</label>
+									<input type="number" class="form-control" id="editCarYear" name="registrationYear"
+										required>
+									<div class="invalid-feedback">Please enter the registration year.</div>
+								</div>
+								<div class="mb-3">
+									<label for="editCarPrice" class="form-label">Price</label>
+									<input type="number" step="0.01" class="form-control" id="editCarPrice"
+										name="carPrice" required>
+									<div class="invalid-feedback">Please enter a valid price.</div>
+								</div>
+								<div class="mb-3">
+									<label for="editCarMileage" class="form-label">Mileage (miles)</label>
+									<input type="number" class="form-control" id="editCarMileage" name="carMileage">
+								</div>
+								<div class="mb-3">
+									<label for="editCarFuelType" class="form-label">Fuel Type</label>
+									<select id="editCarFuelType" name="fuelType" class="form-select">
+										<option value="">Select Fuel Type</option>
+										<option th:each="type : ${T(com.autoxpress.model.CarModel$FuelType).values()}"
+											th:value="${type}" th:text="${type}"></option>
+									</select>
+								</div>
+								<div class="mb-3">
+									<label for="editCarTransmission" class="form-label">Transmission</label>
+									<select id="editCarTransmission" name="transmissionType" class="form-select">
+										<option value="">Select Transmission</option>
+										<option
+											th:each="type : ${T(com.autoxpress.model.CarModel$TransmissionType).values()}"
+											th:value="${type}" th:text="${type}"></option>
+									</select>
+								</div>
+								<div class="mb-3">
+									<label for="editCarStatus" class="form-label">Status</label>
+									<select id="editCarStatus" name="carStatus" class="form-select" required>
+										<option
+											th:each="status : ${T(com.autoxpress.model.CarModel$CarStatus).values()}"
+											th:value="${status}" th:text="${status}"></option>
+									</select>
+									<div class="invalid-feedback">Please select a status.</div>
+								</div>
+								<button type="submit" class="btn btn-primary w-100">Save Changes</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Delete Car Modal -->
+			<div class="modal fade" id="deleteCarModal" tabindex="-1" aria-labelledby="deleteCarModalLabel"
+				aria-hidden="true">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="deleteCarModalLabel">Delete Car</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<form id="deleteCarForm" th:action="@{/admin/cars/delete}" method="post"
+								class="needs-validation" novalidate>
+								<input type="hidden" name="carId" id="deleteCarId">
+								<div class="mb-3">
+									<label for="deleteReason" class="form-label">Reason for Deletion</label>
+									<textarea class="form-control" id="deleteReason" name="reason" rows="3"
+										required></textarea>
+									<div class="invalid-feedback">Please provide a reason for deletion.</div>
+								</div>
+								<button type="submit" class="btn btn-danger w-100">Delete Car</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Delete User Modal -->
+	<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+	    <div class="modal-dialog">
+	        <div class="modal-content">
+	            <div class="modal-header">
+	                <h5 class="modal-title" id="deleteUserModalLabel">Delete User</h5>
+	                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	            </div>
+	            <div class="modal-body">
+	                <form id="deleteUserForm" th:action="@{/admin/users/delete}" method="post" class="needs-validation" novalidate>
+	                    <input type="hidden" name="userId" id="deleteUserId">
+	                    <p>Are you sure you want to delete this user?</p>
+	                    <button type="submit" class="btn btn-danger w-100">Delete User</button>
+	                </form>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+
+	<!-- Include the footer -->
+	<div th:replace="~{fragments/footer :: footer}"></div>
+
+	<script>
+		$(document).ready(function () {
+			$('.appointmentDate').each(function () {
+				let rawDate = $(this).text();
+				let formattedDate = rawDate.replace('T', ' ');
+				$(this).text(formattedDate);
+			});
+
+			$('.needs-validation').on('submit', function (event) {
+				if (!this.checkValidity()) {
+					event.preventDefault();
+					event.stopPropagation();
+				}
+				$(this).addClass('was-validated');
+			});
+
+			// Auto-hide alerts after 8 seconds
+			$('.auto-hide').each(function () {
+				var $alert = $(this);
+				setTimeout(function () {
+					$alert.fadeOut('slow', function () {
+						$alert.remove();
+					});
+				}, 8000);
+			});
+
+			// Populate Edit User Modal
+			$('#editUserModal').on('show.bs.modal', function (event) {
+				var button = $(event.relatedTarget);
+				var userId = button.data('user-id');
+				var username = button.data('username');
+				var email = button.data('email');
+
+				var modal = $(this);
+				modal.find('#editUserId').val(userId);
+				modal.find('#editUsername').val(username);
+				modal.find('#editEmail').val(email);
+			});
+
+			
+			// Handle Edit User Form Submission
+			$('#editUserForm').on('submit', function (event) {
+				event.preventDefault();
+				var form = $(this);
+				if (!form[0].checkValidity()) {
+					form.addClass('was-validated');
+					return;
+				}
+				var formData = form.serialize();
+				$.ajax({
+					url: form.attr('action'),
+					type: form.attr('method'),
+					data: formData,
+					success: function (response) {
+						if (response.status === 'success') {
+							$('#editUserModal').modal('hide');
+							location.reload();
+						} else {
+							alert(response.message);
+						}
+					},
+					error: function (xhr, status, error) {
+						alert('An error occurred while updating the user: ' + error);
+					}
+				});
+			});
+
+			// Populate Edit Car Modal
+			$('#editCarModal').on('show.bs.modal', function (event) {
+				var button = $(event.relatedTarget);
+				var carId = button.data('car-id');
+				var make = button.data('make');
+				var model = button.data('model');
+				var year = button.data('year');
+				var price = button.data('price');
+				var mileage = button.data('mileage');
+				var fuelType = button.data('fuel-type');
+				var transmission = button.data('transmission');
+				var status = button.data('status');
+
+				var modal = $(this);
+				modal.find('#editCarId').val(carId);
+				modal.find('#editCarMake').val(make);
+				modal.find('#editCarModel').val(model);
+				modal.find('#editCarYear').val(year);
+				modal.find('#editCarPrice').val(price);
+				modal.find('#editCarMileage').val(mileage);
+				modal.find('#editCarFuelType').val(fuelType || '');
+				modal.find('#editCarTransmission').val(transmission || '');
+				modal.find('#editCarStatus').val(status || '');
+			});
+
+			// Handle Edit Car Form Submission
+			$('#editCarForm').on('submit', function (event) {
+				event.preventDefault();
+				var form = $(this);
+				if (!form[0].checkValidity()) {
+					form.addClass('was-validated');
+					return;
+				}
+				$.ajax({
+					url: form.attr('action'),
+					type: form.attr('method'),
+					data: form.serialize(),
+					success: function (response) {
+						if (response.status === 'success') {
+							$('#editCarModal').modal('hide');
+							location.reload();
+						} else {
+							alert(response.message);
+						}
+					},
+					error: function () {
+						alert('An error occurred while updating the car.');
+					}
+				});
+			});
+
+			// Populate Delete Car Modal
+			$('#deleteCarModal').on('show.bs.modal', function (event) {
+				var button = $(event.relatedTarget);
+				var carId = button.data('car-id');
+
+				var modal = $(this);
+				modal.find('#deleteCarId').val(carId);
+			});
+
+			// Handle Delete Car Form Submission
+			$('#deleteCarForm').on('submit', function (event) {
+				event.preventDefault();
+				var form = $(this);
+				if (!form[0].checkValidity()) {
+					form.addClass('was-validated');
+					return;
+				}
+				$.ajax({
+					url: form.attr('action'),
+					type: form.attr('method'),
+					data: form.serialize(),
+					success: function (response) {
+						if (response.status === 'success') {
+							$('#deleteCarModal').modal('hide');
+							location.reload();
+						} else {
+							alert(response.message);
+						}
+					},
+					error: function () {
+						alert('An error occurred while deleting the car.');
+					}
+				});
+			});
+		});
+		
+		// Populate Delete User Modal
+		$('#deleteUserModal').on('show.bs.modal', function (event) {
+		    var button = $(event.relatedTarget);
+		    var userId = button.data('user-id');
+
+		    var modal = $(this);
+		    modal.find('#deleteUserId').val(userId);
+		});
+
+		// Handle Delete User Form Submission
+		$('#deleteUserForm').on('submit', function (event) {
+		    event.preventDefault();
+		    var form = $(this);
+		    if (!form[0].checkValidity()) {
+		        form.addClass('was-validated');
+		        return;
+		    }
+		    $.ajax({
+		        url: form.attr('action'),
+		        type: form.attr('method'),
+		        data: form.serialize(),
+		        success: function (response) {
+		            if (response.status === 'success') {
+		                $('#deleteUserModal').modal('hide');
+		                location.reload();
+		            } else {
+		                alert(response.message);
+		            }
+		        },
+		        error: function () {
+		            alert('An error occurred while deleting the user.');
+		        }
+		    });
+		});
+	</script>
+</body>
+
+</html>
